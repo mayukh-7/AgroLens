@@ -1,0 +1,7 @@
+streamlit
+transformers
+torch
+pillow
+langchain
+langchain-google-genai
+python-dotenv
