@@ -53,7 +53,7 @@ def get_expert_remedy(disease, crop, llm):
     2. A step-by-step recommended treatment (organic or chemical).
     3. A preventative measure for the future.
     
-    Keep the tone encouraging and simple for a farmer to understand.Please make it under 75 words
+    Please keep it simple for a farmer to understand.Please follow the steps and make it under 75 words.
     """
     
     prompt = ChatPromptTemplate.from_template(template)
