@@ -4,21 +4,21 @@ from PIL import Image
 import os
 from dotenv import load_dotenv
 
-# --- LANGCHAIN IMPORTS ---
+
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 
-# --- 1. CONFIGURATION & SETUP ---
+
 load_dotenv()
 
 st.set_page_config(
     page_title="AgroLens: Expert Diagnosis",
     page_icon="🌿",
-    layout="wide"  # Wide layout looks better for chatbots
+    layout="wide"  
 )
 
-# --- 2. LOAD MODELS (CACHED) ---
+
 
 @st.cache_resource
 def load_vision_model():
@@ -40,29 +40,30 @@ def load_gemini_model():
     )
     return llm
 
-# --- 3. HELPER FUNCTIONS (DIAGNOSIS) ---
-CURE_DATABASE = {
-    "potato early blight": "Apply fungicides containing Chlorothalonil or Mancozeb. Improve air circulation.",
-    "potato late blight": "Apply a copper-based fungicide or Metalaxyl. Destroy infected tubers immediately.",
-    "potato healthy": "The plant is healthy. Maintain regular watering.",
-    "corn common rust": "Apply fungicides with Azoxystrobin. Plant resistant hybrids.",
-    "corn northern leaf blight": "Use fungicides containing Exserohilum. Rotate crops.",
-    "corn healthy": "Corn is healthy. Ensure soil nitrogen levels are adequate.",
-    "rice brown spot": "Improve soil fertility with Potassium and Calcium.",
-    "rice leaf blast": "Apply Tricyclazole fungicides. Avoid excessive nitrogen.",
-    "rice healthy": "Rice crop is healthy. Maintain proper water levels.",
-    "wheat loose smut": "Treat seeds with Carboxin before sowing.",
-    "wheat healthy": "Wheat is healthy. Monitor for aphids."
-}
 
 def get_expert_remedy(disease, crop, llm):
-    key = f"{crop.lower()} {disease.lower()}"
-    raw_cure = CURE_DATABASE.get(key, "Consult a local agriculturist.")
+    template = """
+    You are an expert agriculturalist and plant doctor.
     
-    template = """You are an expert plant doctor. Rewrite this advice to be encouraging and simple for a farmer: "{raw_cure}" """
+    The user has uploaded a photo of a {crop} leaf. 
+    Our vision system has detected the condition: "{disease}".
+    
+    Please provide:
+    1. A brief confirmation of what this disease looks like.
+    2. A step-by-step recommended treatment (organic or chemical).
+    3. A preventative measure for the future.
+    
+    Keep the tone encouraging and simple for a farmer to understand.Please make it under 75 words
+    """
+    
     prompt = ChatPromptTemplate.from_template(template)
     chain = prompt | llm
-    response = chain.invoke({"raw_cure": raw_cure})
+    
+    
+    response = chain.invoke({
+        "crop": crop, 
+        "disease": disease
+    })
     return response.content
 
 def parse_prediction(label):
@@ -76,13 +77,13 @@ def parse_prediction(label):
     detected_disease = clean_label.replace(detected_crop, "").strip() if detected_crop != "Unidentified" else clean_label
     return detected_crop, detected_disease.title()
 
-# --- 4. MAIN APP NAVIGATION ---
 
-# SIDEBAR NAVIGATION
+
+# SIDEBAR 
 st.sidebar.title("🌿 AgroLens Menu")
 app_mode = st.sidebar.radio("Go to:", ["🍃 Leaf Diagnosis", "💬 AI Agri-Chatbot"])
 
-# --- MODE 1: LEAF DIAGNOSIS (Your Original App) ---
+#  MODE 1: LEAF DIAGNOSIS 
 if app_mode == "🍃 Leaf Diagnosis":
     st.title("🌿 AgroLens: Plant Doctor")
     st.markdown("Upload a photo of a crop leaf to detect diseases and get expert cures.")
@@ -126,41 +127,41 @@ if app_mode == "🍃 Leaf Diagnosis":
                         st.error(f"**Confirmed Disease:** {final_disease}")
                         st.info(f"**Prescription:** {remedy}")
                     
-                    # --- ADDED: KNOWLEDGE BASE MATCH SECTION ---
+                    
                     with st.expander("See Knowledge Base Match"):
                         st.write(f"**Lookup Key:** {final_crop.lower()} {final_disease.lower()}")
                         st.write(f"**Vision Model:** wambugu71/crop_leaf_diseases_vit")
                         st.json(results)
 
-# --- MODE 2: AI CHATBOT (New Feature) ---
+# MODE 2: AI CHATBOT 
 elif app_mode == "💬 AI Agri-Chatbot":
     st.title("💬 AgroBot Assistant")
     st.caption("Ask me anything about farming, pests, soil health, or fertilizers ")
 
-    # Initialize Chat History
+   
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
-    # Display Chat History
+    
     for message in st.session_state.chat_history:
         role = "user" if isinstance(message, HumanMessage) else "assistant"
         with st.chat_message(role):
             st.markdown(message.content)
 
-    # Chat Input
+   
     user_query = st.chat_input("Ask your farming question here...")
     
     if user_query:
-        # 1. Add User Message to UI
+        
         st.chat_message("user").markdown(user_query)
         st.session_state.chat_history.append(HumanMessage(content=user_query))
         
-        # 2. Generate AI Response
+       
         llm = load_gemini_model()
         if llm:
             with st.chat_message("assistant"):
                 with st.spinner("AgroBot is thinking..."):
-                    # System Prompt to keep it focused on Agriculture
+                   
                     system_prompt = """
                     You are AgroBot, an expert AI Agricultural Consultant. 
                     Answer questions related to farming, crops, pests, soil, and weather.
@@ -168,7 +169,7 @@ elif app_mode == "💬 AI Agri-Chatbot":
                     Keep your answers practical, concise, and easy for farmers to understand.
                     """
                     
-                    # Build the prompt with history
+                   
                     prompt = ChatPromptTemplate.from_messages([
                         ("system", system_prompt),
                         MessagesPlaceholder(variable_name="history"),
@@ -184,7 +185,7 @@ elif app_mode == "💬 AI Agri-Chatbot":
                     
                     st.markdown(response.content)
             
-            # 3. Save AI Response to History
+           
             st.session_state.chat_history.append(AIMessage(content=response.content))
 
 st.sidebar.markdown("---")
