@@ -53,18 +53,26 @@ def get_expert_remedy(disease, crop, llm):
     2. A step-by-step recommended treatment (organic or chemical).
     3. A preventative measure for the future.
     
-    Please keep it simple for a farmer to understand.Please follow the steps and make it under 75 words.
+    Please keep it simple for a farmer to understand. Please follow the steps and make it under 75 words.
     """
     
     prompt = ChatPromptTemplate.from_template(template)
     chain = prompt | llm
     
-    
     response = chain.invoke({
         "crop": crop, 
         "disease": disease
     })
-    return response.content
+    
+    content = response.content
+    
+
+    if isinstance(content, list):
+       
+        return content[0].get('text', '')
+        
+   
+    return content
 
 def parse_prediction(label):
     known_crops = ["Corn", "Potato", "Rice", "Wheat"]
