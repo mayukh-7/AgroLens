@@ -198,4 +198,4 @@ elif app_mode == "💬 AI Agri-Chatbot":
             
             st.session_state.chat_history.append(AIMessage(content=response_text))
 st.sidebar.markdown("---")
-st.sidebar.caption("Made by Team AgroLens | Samsung Innovation Campus")
+st.sidebar.caption("Made by Team AgroLens")
