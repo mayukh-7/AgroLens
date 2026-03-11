@@ -3,7 +3,7 @@ from transformers import pipeline
 from PIL import Image
 import os
 from dotenv import load_dotenv
-
+from langchain_core.output_parsers import StrOutputParser
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -184,17 +184,18 @@ elif app_mode == "💬 AI Agri-Chatbot":
                         ("human", "{input}")
                     ])
                     
-                    chain = prompt | llm
+                  # 1. Add the parser to the end of your chain
+                    chain = prompt | llm | StrOutputParser() 
                     
-                    response = chain.invoke({
+                    # 2. Invoke now returns a clean string directly (no need for .content)
+                    response_text = chain.invoke({
                         "history": st.session_state.chat_history,
                         "input": user_query
                     })
                     
-                    st.markdown(response.content)
+                    # 3. Print and save the clean string
+                    st.markdown(response_text)
             
-           
-            st.session_state.chat_history.append(AIMessage(content=response.content))
-
+            st.session_state.chat_history.append(AIMessage(content=response_text))
 st.sidebar.markdown("---")
 st.sidebar.caption("Made by Team AgroLens | Samsung Innovation Campus")
