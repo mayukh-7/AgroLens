@@ -34,7 +34,7 @@ def load_gemini_model():
         return None
     
     llm = ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash", 
+        model="gemini-3.1-flash-lite-preview", 
         temperature=0.7,
         convert_system_message_to_human=True 
     )
