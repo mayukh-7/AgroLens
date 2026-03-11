@@ -1,7 +1,6 @@
 streamlit
 transformers
-torch
 pillow
-langchain
-langchain-google-genai
 python-dotenv
+langchain-google-genai>=1.0.8 
+langchain-core
